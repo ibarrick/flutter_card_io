@@ -10,6 +10,10 @@ import io.card.payment.CardIOActivity;
 import io.card.payment.CardType;
 import io.card.payment.CreditCard;
 import io.flutter.plugin.common.MethodCall;
+import io.flutter.embedding.engine.plugins.FlutterPlugin;
+import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding;
+import io.flutter.embedding.engine.plugins.activity.ActivityAware;
+import io.flutter.plugin.common.BinaryMessenger;
 import io.flutter.plugin.common.MethodChannel;
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler;
 import io.flutter.plugin.common.MethodChannel.Result;
@@ -20,12 +24,14 @@ import io.flutter.plugin.common.PluginRegistry.Registrar;
 /**
  * FlutterCardIoPlugin
  */
-public class FlutterCardIoPlugin implements MethodCallHandler, ActivityResultListener {
+public class FlutterCardIoPlugin implements FlutterPlugin, MethodCallHandler, ActivityResultListener, ActivityAware {
     private static final int MY_SCAN_REQUEST_CODE = 100;
 
-    private final PluginRegistry.Registrar registrar;
+    // private final PluginRegistry.Registrar registrar;
     private Result pendingResult;
     private MethodCall methodCall;
+    private ActivityPluginBinding binding;
+    private Registrar registrar;
 
     /**
      * Plugin registration.
@@ -37,8 +43,39 @@ public class FlutterCardIoPlugin implements MethodCallHandler, ActivityResultLis
         channel.setMethodCallHandler(instance);
     }
 
+    @Override
+    public void onAttachedToEngine(FlutterPluginBinding flutterPluginBinding) {
+        final MethodChannel channel = new MethodChannel(flutterPluginBinding.getBinaryMessenger(), "flutter_card_io");
+
+        channel.setMethodCallHandler(this);
+    }
+
+    @Override
+    public void onDetachedFromEngine(FlutterPluginBinding flutterPluginBinding) {
+
+    }
+
+    public void onDetachedFromActivityForConfigChanges() {
+
+    }
+
+    public void onReattachedToActivityForConfigChanges(ActivityPluginBinding binding) {
+
+    }
+
+    public void onAttachedToActivity(ActivityPluginBinding aBinding) {
+        binding = aBinding;
+    }
+
+    public void onDetachedFromActivity() {
+
+    }
     private FlutterCardIoPlugin(PluginRegistry.Registrar registrar) {
         this.registrar = registrar;
+    }
+
+    public FlutterCardIoPlugin() {
+        this.registrar = null;
     }
 
     @Override
@@ -48,7 +85,7 @@ public class FlutterCardIoPlugin implements MethodCallHandler, ActivityResultLis
             return;
         }
 
-        Activity activity = registrar.activity();
+        Activity activity = binding.getActivity();
         if (activity == null) {
             result.error("no_activity", "flutter_card_io plugin requires a foreground activity.", null);
             return;
